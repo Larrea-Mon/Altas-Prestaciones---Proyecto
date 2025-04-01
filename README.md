@@ -1,13 +1,22 @@
 Cracker Larrea - Mishelle:
+
 Compilación: gcc -fopenmp crackerLM.c -o crackerLM.exe -lcrypto -Wno-deprecated-declarations
+
 Uso: ./crackerLM.exe <hash>
+
 Ejemplo: ./crackerLM.exe 4d186321c1a7f0f354b297e8914ab240
+
 Testado en linux (WSL).
 
+
 Hasher:
+
 Compilación: gcc hasher.c -o hasher -lcrypto -Wno-deprecated-declarations
+
 Uso: ./hasher <contraseña>
+
 Ejemplo: ./hasher hola
+
 MD5 hash: 4d186321c1a7f0f354b297e8914ab240
 
 
