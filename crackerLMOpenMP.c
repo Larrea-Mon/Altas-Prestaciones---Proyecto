@@ -55,14 +55,14 @@ void int_to_pass(int num, char *str)
     str[index] = '\0';
 }
 
-int check(long candidata, char secreto[])
+int check(long candidata, char secreto[],bool verbose)
 {
     char pass[100];
     char passMD5[100];
     int_to_pass(candidata, pass);
     hashMD5(pass, passMD5);
 
-    // Des-comenta la linea inferior para imprimir 40 septillones de líneas
+    if (verbose)
     printf("%li - comprobando contraseña %s - %s\n", candidata, pass, passMD5);
 
     if (strcmp(passMD5, secreto) == 0)
@@ -98,27 +98,31 @@ int main(int argc, char *argv[])
     int opt;
     char secreto[SIZE] = "";
     int num_threads = 1;
+    bool verbose = false;
 
-    while ((opt = getopt(argc, argv, "h:t:")) != -1)
+    while ((opt = getopt(argc, argv, "h:t:v")) != -1)
+{
+    switch (opt)
     {
-        switch (opt)
+    case 'h':
+        strncpy(secreto, optarg, SIZE);
+        break;
+    case 't':
+        num_threads = atoi(optarg);
+        if (num_threads <= 0 || num_threads > 255)
         {
-        case 'h':
-            strncpy(secreto, optarg, SIZE);
-            break;
-        case 't':
-            num_threads = atoi(optarg);
-            if (num_threads <= 0 || num_threads > 255)
-            {
-                fprintf(stderr, "Número de hilos inválido: %s\n", optarg);
-                return EXIT_FAILURE;
-            }
-            break;
-        default:
-            fprintf(stderr, "Uso: %s -t num_threads -h hash\n", argv[0]);
+            fprintf(stderr, "Número de hilos inválido: %s\n", optarg);
             return EXIT_FAILURE;
         }
+        break;
+    case 'v':
+        verbose = true;
+        break;
+    default:
+        fprintf(stderr, "Uso: %s -t num_threads -h hash [-v]\n", argv[0]);
+        return EXIT_FAILURE;
     }
+}
 
     if (checkMD5(secreto) != 0)
     {
@@ -148,7 +152,7 @@ int main(int argc, char *argv[])
 
         while (!encontrada)
         {
-            local_result = check(current, secreto);
+            local_result = check(current, secreto,verbose);
 
             if (local_result == 1)
             {
