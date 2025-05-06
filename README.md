@@ -1,24 +1,17 @@
-Cracker Larrea - Mishelle:
+Crackers Larrea - Mishelle:
 
-Compilación: gcc -fopenmp crackerLM.c -o crackerLM.exe -lcrypto -Wno-deprecated-declarations
+**Todos estos programas funcionan únicamente por línea de comandos.**
 
-Uso: ./crackerLM.exe <hash>
+Esta es una colección de crackeo de contraseñas, compuesta por un Hasher y tres Crackers alternativos. Cada carpeta contiene un programa y un README.md que detalla el uso del programa.
 
-Ejemplo: ./crackerLM.exe 4d186321c1a7f0f354b297e8914ab240
+La carpeta /Hasher continene un programa al que se le introduce una contraseña y devuelve el hash correspondiente.
 
-Testado en linux (WSL).
+La carpeta /Secuencial contiene un cracker que utiliza un único hilo
 
+El cracker en la carpeta /OpenMP utiliza hilos en el programa.
 
-Hasher:
+El cracker en la carpeta /MPI utiliza procesos paralelos.
 
-Compilación: gcc hasher.c -o hasher -lcrypto -Wno-deprecated-declarations
-
-Uso: ./hasher <contraseña>
-
-Ejemplo: ./hasher hola
-
-MD5 hash: 4d186321c1a7f0f354b297e8914ab240
+Ambos crackers permiten a le usuarie introducir el numero de hilos o de procesos que desea utilizar.
 
 
-Para obtener un hash que comprobar, utiliza el programa hasher. Una vez que tengas un Hash, utiliza el cracker para revertir el proceso.
-El cracker obtiene contraseñas con letras minúsculas y mayúsculas excepto la ñ, cifras, y los caracteres especiales !?+. Si introducieras un hash de una contraseña con un caracter fuera de esta especificación, nunca encontrará la contraseña y correrá para siempre. Utiliza CTRL+C para parar el programa. 
