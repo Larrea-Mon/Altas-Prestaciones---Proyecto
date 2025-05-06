@@ -10,7 +10,7 @@ Ejemplo:  mpirun -np 4 ./crackerLMMPI.exe -h 827ccb0eea8a706c4c34a16891f84e7b
 
 Testado en linux  (WSL).
 
-Si al prender el programa todos los procesos piensan que son el proceso 0, desinstala todas tus versiones de MPI y haz "sudo apt install openmpi-bin libopenmpi-dev", y recompila el programa.  
+Si al prender el programa todos los procesos piensan que son el proceso 0, desinstala todas tus versiones de MPI y haz "sudo apt install openmpi-bin libopenmpi-dev", y recompila el programa. Este error suele ocurrir cuando le usuarie tiene más de una versión de MPI instalada.  
 
 Para obtener un hash que comprobar, utiliza el programa hasher. Una vez que tengas un Hash, utiliza el cracker para revertir el proceso.
 El cracker obtiene contraseñas con letras minúsculas y mayúsculas excepto la ñ, cifras, y los caracteres especiales !?+. Si introducieras un hash de una contraseña con un caracter fuera de esta especificación, nunca encontrará la contraseña y correrá para siempre. Utiliza CTRL+C para parar el programa.
