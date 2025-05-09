@@ -24,16 +24,16 @@ int hashMD5(const char *texto, char *md5_str)
     }
     md5_str[MD5_DIGEST_LENGTH * 2] = '\0';
 }
-void int_to_pass(int num, char *str)
+void int_to_pass(unsigned long long num, char *str)
 {
     char buffer[100];
-    int index = 0;
+    unsigned long long index = 0;
 
     {
         while (num > 0)
         {
-            num--;  // Ajuste para hacer la numeración 1-based
-            int remainder = num % DICT_LEN;
+            num--; // Ajuste para hacer la numeración 1-based
+            unsigned long long remainder = num % DICT_LEN;
             buffer[index++] = ALPHA[remainder];
             num /= DICT_LEN;
         }
@@ -41,7 +41,7 @@ void int_to_pass(int num, char *str)
     buffer[index] = '\0'; // Agregar fin de cadena
     {
         // Invertir el resultado para obtener el orden correcto
-        for (int i = 0; i < index / 2; i++)
+        for (unsigned long long i = 0; i < index / 2; i++)
         {
             char temp = buffer[i];
             buffer[i] = buffer[index - i - 1];
@@ -49,30 +49,31 @@ void int_to_pass(int num, char *str)
         }
         // Copiar el resultado a str (sobreescribiendo el contenido previo)
         strcpy(str, buffer);
-    }   
+    }
 }
-int check(int long candidata, char secreto[])
+int check(unsigned long long candidata, char secreto[])
 {
     char pass[100];
     char passMD5[100];
-    int_to_pass(candidata,pass);
-    hashMD5(pass,passMD5);
-    //Des-comenta la linea inferior para imprimir 40 millones de líneas
-    //printf("%li - comprobando contraseña %s - %s\n",candidata, pass, passMD5);
-    
+    int_to_pass(candidata, pass);
+    hashMD5(pass, passMD5);
+    // Des-comenta la linea inferior para imprimir 40 millones de líneas
+    // printf("%li - comprobando contraseña %s - %s\n",candidata, pass, passMD5);
+
     int result = 0;
     // si es la contraseña, return 1
-    if(strcmp(passMD5, secreto) == 0 ){
+    if (strcmp(passMD5, secreto) == 0)
+    {
         printf("Los hashes coinciden:\n");
-        printf("%s \n",passMD5);
-        printf("%s \n",secreto);
+        printf("%s \n", passMD5);
+        printf("%s \n", secreto);
         result = 1;
     }
     // si no es la contraseña, return 0
     return result;
 }
 
-int checkMD5(char entrada[])  //Esta función sirve para devolver al usuario información sobre el uso correcto del programa
+int checkMD5(char entrada[]) // Esta función sirve para devolver al usuario información sobre el uso correcto del programa
 {
     if (strlen(entrada) > 32)
     {
@@ -99,8 +100,11 @@ int checkMD5(char entrada[])  //Esta función sirve para devolver al usuario inf
 int main(int argc, char const *argv[])
 {
     unsigned char secreto[SIZE];
-    int long candidata;
+    unsigned long long candidata;
     unsigned char hash[SIZE];
+    struct timespec start_time, end_time;
+    double elapsed;
+
     if (argc != 2)
     {
         printf("Error, uso: %s <hash>\n", argv[0]);
@@ -111,21 +115,36 @@ int main(int argc, char const *argv[])
     printf("Secreto: %s\n", secreto);
     candidata = 0;
     int md5Flag = checkMD5(secreto);
-    if (md5Flag != 0) //si no es un hash MD5, sal del programa.
+    if (md5Flag != 0) // si no es un hash MD5, sal del programa.
     {
         return 1;
     }
+    // Start timing
+    clock_gettime(CLOCK_MONOTONIC, &start_time); // esto no da error en linux, confia
+
     printf("Buscando contraseña...\n");
     int encontrado = 0;
     while (encontrado == 0)
     {
-        //el programa asigna la contraseña "a" al numero 1, la "b" al numero 2, la aa al numero 66, etc. Cuando encuentra la contraseña con el hash correcto, para.
+        // el programa asigna la contraseña "a" al numero 1, la "b" al numero 2, la aa al numero 66, etc. Cuando encuentra la contraseña con el hash correcto, para.
         candidata++;
         encontrado = check(candidata, secreto);
     }
     printf("encontrada contraseña: ");
     char resultado[100];
-    int_to_pass(candidata--,resultado);
+    int_to_pass(candidata--, resultado);
     printf("%s \n", resultado);
+
+    // Calcula el tiempo transcurrido
+
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
+
+    elapsed = (end_time.tv_sec - start_time.tv_sec) +
+              (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
+
+    int hours = (int)(elapsed / 3600);
+    int minutes = ((int)elapsed % 3600) / 60;
+    double seconds = elapsed - (hours * 3600) - (minutes * 60);
+    printf("Tiempo transcurrido: %02d horas, %02d minutos, %06.3f segundos\n", hours, minutes, seconds);
     return 0;
 }
