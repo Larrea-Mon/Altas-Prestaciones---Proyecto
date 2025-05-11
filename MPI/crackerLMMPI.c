@@ -29,15 +29,15 @@ void hashMD5(const char *texto, char *md5_str)
     md5_str[MD5_DIGEST_LENGTH * 2] = '\0';
 }
 
-void int_to_pass(long num, char *str)
+void int_to_pass(unsigned long long num, char *str)
 {
     char buffer[100];
-    int index = 0;
+    unsigned long long index = 0;
 
     while (num > 0)
     {
         num--;
-        int remainder = num % DICT_LEN;
+        unsigned long long remainder = num % DICT_LEN;
         buffer[index++] = ALPHA[remainder];
         num /= DICT_LEN;
     }
@@ -50,7 +50,7 @@ void int_to_pass(long num, char *str)
     str[index] = '\0';
 }
 
-int check(long candidata, char secreto[], int rank, int verbose)
+bool check(unsigned long long candidata, char secreto[], int rank, bool verbose)
 {
     char pass[100];
     char passMD5[100];
@@ -60,25 +60,28 @@ int check(long candidata, char secreto[], int rank, int verbose)
     if (verbose)
         printf("Proceso %d - %li - comprobando contraseña %s - %s\n", rank, candidata, pass, passMD5);
 
-    return strcmp(passMD5, secreto) == 0;
+     if(strcmp(passMD5, secreto) == 0)
+     return true;
+     else
+     return false;
 }
 
-int checkMD5(char entrada[])
+bool checkMD5(char entrada[])
 {
     if (strlen(entrada) != 32)
     {
         printf("El hash debe tener exactamente 32 caracteres.\n");
-        return 1;
+        return false;
     }
     for (int i = 0; i < 32; i++)
     {
         if (!isxdigit((unsigned char)entrada[i]))
         {
             printf("El hash debe estar en formato hexadecimal.\n");
-            return 1;
+            return false;
         }
     }
-    return 0;
+    return true;
 }
 
 int main(int argc, char *argv[])
@@ -87,7 +90,7 @@ int main(int argc, char *argv[])
     int opt;
     char secreto[SIZE] = "";
 
-    int verbose = 0;
+    bool verbose = false;
 
     while ((opt = getopt(argc, argv, "h:v")) != -1)
 {
@@ -97,7 +100,7 @@ int main(int argc, char *argv[])
         strncpy(secreto, optarg, SIZE);
         break;
     case 'v':
-        verbose = 1;
+        verbose = true;
         break;
     default:
         fprintf(stderr, "Uso: %s -h hash [-v]\n", argv[0]);
@@ -119,8 +122,8 @@ int main(int argc, char *argv[])
 
     printf("Proceso %d inicializado\n", world_rank);
 
-    long current = world_rank + 1; // Starts at rank+1 for proper interleaving
-    long winning_value = -1;
+    unsigned long long current = world_rank + 1; // Starts at rank+1 for proper interleaving
+    unsigned long long winning_value = -1;
     int found = 0;
     int global_found = 0;
 

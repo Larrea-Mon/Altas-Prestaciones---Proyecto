@@ -61,7 +61,7 @@ bool check(unsigned long long candidata, char secreto[])
     // Des-comenta la linea inferior para imprimir 40 millones de líneas
     // printf("%li - comprobando contraseña %s - %s\n",candidata, pass, passMD5);
 
-    int result = false;
+    bool result = false;
     // si es la contraseña, return 1
     if (strcmp(passMD5, secreto) == 0)
     {
