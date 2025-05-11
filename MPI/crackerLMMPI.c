@@ -58,7 +58,7 @@ bool check(unsigned long long candidata, char secreto[], int rank, bool verbose)
     hashMD5(pass, passMD5);
 
     if (verbose)
-        printf("Proceso %d - %li - comprobando contraseña %s - %s\n", rank, candidata, pass, passMD5);
+        printf("Proceso %d - %lli - comprobando contraseña %s - %s\n", rank, candidata, pass, passMD5);
 
      if(strcmp(passMD5, secreto) == 0)
      return true;
