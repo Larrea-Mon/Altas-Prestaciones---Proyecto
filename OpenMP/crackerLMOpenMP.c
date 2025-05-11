@@ -17,7 +17,8 @@
 #define ALPHA \
     "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 #define DICT_LEN 94
-*/ //Este es demasiado largo, encontrar una contraseña de 6 caracteres tarda horas
+*/
+// Este es demasiado largo, encontrar una contraseña de 6 caracteres tarda horas
 #define DICT_LEN 66
 #define ALPHA "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!?+"
 
@@ -33,15 +34,15 @@ void hashMD5(const char *texto, char *md5_str)
     md5_str[MD5_DIGEST_LENGTH * 2] = '\0';
 }
 
-void int_to_pass(int num, char *str)
+void int_to_pass(unsigned long long num, char *str)
 {
     char buffer[100];
-    int index = 0;
+    unsigned long long index = 0;
 
     while (num > 0)
     {
         num--; // Adjust for 1-based indexing
-        int remainder = num % DICT_LEN;
+        unsigned long long remainder = num % DICT_LEN;
         buffer[index++] = ALPHA[remainder];
         num /= DICT_LEN;
     }
@@ -55,7 +56,7 @@ void int_to_pass(int num, char *str)
     str[index] = '\0';
 }
 
-int check(long candidata, char secreto[],bool verbose)
+bool check(unsigned long long candidata, char secreto[], bool verbose)
 {
     char pass[100];
     char passMD5[100];
@@ -63,34 +64,34 @@ int check(long candidata, char secreto[],bool verbose)
     hashMD5(pass, passMD5);
 
     if (verbose)
-    printf("%li - comprobando contraseña %s - %s\n", candidata, pass, passMD5);
+        printf("%lli - comprobando contraseña %s - %s\n", candidata, pass, passMD5);
 
     if (strcmp(passMD5, secreto) == 0)
     {
         printf("¡Hash encontrado!\n");
         printf("Hash:     %s\n", passMD5);
         printf("Original: %s\n", secreto);
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
 
-int checkMD5(char entrada[])
+bool checkMD5(char entrada[])
 {
     if (strlen(entrada) != 32)
     {
         printf("El hash debe tener exactamente 32 caracteres.\n");
-        return 1;
+        return false;
     }
     for (int i = 0; i < 32; i++)
     {
         if (!isxdigit((unsigned char)entrada[i]))
         {
             printf("El hash debe estar en formato hexadecimal.\n");
-            return 1;
+            return false;
         }
     }
-    return 0;
+    return true;
 }
 
 int main(int argc, char *argv[])
@@ -101,30 +102,30 @@ int main(int argc, char *argv[])
     bool verbose = false;
 
     while ((opt = getopt(argc, argv, "h:t:v")) != -1)
-{
-    switch (opt)
     {
-    case 'h':
-        strncpy(secreto, optarg, SIZE);
-        break;
-    case 't':
-        num_threads = atoi(optarg);
-        if (num_threads <= 0 || num_threads > 255)
+        switch (opt)
         {
-            fprintf(stderr, "Número de hilos inválido: %s\n", optarg);
+        case 'h':
+            strncpy(secreto, optarg, SIZE);
+            break;
+        case 't':
+            num_threads = atoi(optarg);
+            if (num_threads <= 0 || num_threads > 255)
+            {
+                fprintf(stderr, "Número de hilos inválido: %s\n", optarg);
+                return EXIT_FAILURE;
+            }
+            break;
+        case 'v':
+            verbose = true;
+            break;
+        default:
+            fprintf(stderr, "Uso: %s -t num_threads -h hash [-v]\n", argv[0]);
             return EXIT_FAILURE;
         }
-        break;
-    case 'v':
-        verbose = true;
-        break;
-    default:
-        fprintf(stderr, "Uso: %s -t num_threads -h hash [-v]\n", argv[0]);
-        return EXIT_FAILURE;
     }
-}
 
-    if (checkMD5(secreto) != 0)
+    if (checkMD5(secreto) == false)
     {
         return EXIT_FAILURE;
     }
@@ -135,7 +136,7 @@ int main(int argc, char *argv[])
     printf("Buscando...\n");
 
     volatile bool encontrada = false;
-    long winning_value = -1;
+    unsigned long long winning_value = -1;
     int winning_thread = -1;
 
     struct timespec start_time, end_time;
@@ -147,14 +148,14 @@ int main(int argc, char *argv[])
 #pragma omp parallel shared(encontrada, secreto, winning_value, winning_thread)
     {
         int thread_id = omp_get_thread_num();
-        long current = thread_id + 1;
-        int local_result;
+        unsigned long long current = thread_id + 1;
+        bool local_result;
 
         while (!encontrada)
         {
-            local_result = check(current, secreto,verbose);
+            local_result = check(current, secreto, verbose);
 
-            if (local_result == 1)
+            if (local_result == true)
             {
 #pragma omp critical
                 {
@@ -172,11 +173,33 @@ int main(int argc, char *argv[])
             // Hardcodeado porque no me apecete escribir una funcion exponente en C a estas alturas
             if (current == 7339040224)
             {
-                printf("Comprobadas todas las contraseñas de hasta 5 caracteres...");
+                printf("Comprobadas todas las contraseñas de hasta 5 caracteres...\n");
+                // Stop timing
+                clock_gettime(CLOCK_MONOTONIC, &end_time);
+
+                // Calculate elapsed time in seconds
+                elapsed = (end_time.tv_sec - start_time.tv_sec) +
+                          (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
+
+                int hours = (int)(elapsed / 3600);
+                int minutes = ((int)elapsed % 3600) / 60;
+                double seconds = elapsed - (hours * 3600) - (minutes * 60);
+                printf("Tiempo transcurrido: %02d horas, %02d minutos, %06.3f segundos\n", hours, minutes, seconds);
             }
             if (current == 689869781056)
             {
-                printf("Comprobadas todas las contraseñas de hasta 6 caracteres...");
+                printf("Comprobadas todas las contraseñas de hasta 6 caracteres...\n");
+                // Stop timing
+                clock_gettime(CLOCK_MONOTONIC, &end_time);
+
+                // Calculate elapsed time in seconds
+                elapsed = (end_time.tv_sec - start_time.tv_sec) +
+                          (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
+
+                int hours = (int)(elapsed / 3600);
+                int minutes = ((int)elapsed % 3600) / 60;
+                double seconds = elapsed - (hours * 3600) - (minutes * 60);
+                printf("Tiempo transcurrido: %02d horas, %02d minutos, %06.3f segundos\n", hours, minutes, seconds);
             }
         }
     }
@@ -198,7 +221,6 @@ int main(int argc, char *argv[])
         int_to_pass(winning_value, resultado);
         printf("Contraseña encontrada por el hilo %d: %s\n", winning_thread, resultado);
         printf("Tiempo transcurrido: %02d horas, %02d minutos, %06.3f segundos\n", hours, minutes, seconds);
-
     }
     else
     {
