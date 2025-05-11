@@ -11,6 +11,7 @@
 #include <openssl/md5.h>
 #include <unistd.h>
 #include <time.h>
+#include <stdbool.h>
 
 int hashMD5(const char *texto, char *md5_str)
 {
@@ -51,7 +52,7 @@ void int_to_pass(unsigned long long num, char *str)
         strcpy(str, buffer);
     }
 }
-int check(unsigned long long candidata, char secreto[])
+bool check(unsigned long long candidata, char secreto[])
 {
     char pass[100];
     char passMD5[100];
@@ -60,30 +61,30 @@ int check(unsigned long long candidata, char secreto[])
     // Des-comenta la linea inferior para imprimir 40 millones de líneas
     // printf("%li - comprobando contraseña %s - %s\n",candidata, pass, passMD5);
 
-    int result = 0;
+    int result = false;
     // si es la contraseña, return 1
     if (strcmp(passMD5, secreto) == 0)
     {
         printf("Los hashes coinciden:\n");
         printf("%s \n", passMD5);
         printf("%s \n", secreto);
-        result = 1;
+        result = true;
     }
     // si no es la contraseña, return 0
     return result;
 }
 
-int checkMD5(char entrada[]) // Esta función sirve para devolver al usuario información sobre el uso correcto del programa
+bool checkMD5(char entrada[]) // Esta función sirve para devolver al usuario información sobre el uso correcto del programa
 {
     if (strlen(entrada) > 32)
     {
         printf("Lo que has introducido no es un HASH MD5, es demasiado largo\n");
-        return 1;
+        return false;
     }
     if (strlen(entrada) < 32)
     {
         printf("Lo que has introducido no es un HASH MD5, es demasiado corto\n");
-        return 1;
+        return false;
     }
     for (int i = 0; i < 32; i++)
     {
@@ -91,10 +92,10 @@ int checkMD5(char entrada[]) // Esta función sirve para devolver al usuario inf
         if (!isxdigit((unsigned char)entrada[i]))
         {
             printf("Lo que has introducido no es un HASH MD5, no está en hexadecimal.\n");
-            return 1;
+            return false;
         }
     }
-    return 0;
+    return true;
 }
 
 int main(int argc, char const *argv[])
@@ -114,8 +115,8 @@ int main(int argc, char const *argv[])
     strncpy(secreto, argv[1], SIZE);
     printf("Secreto: %s\n", secreto);
     candidata = 0;
-    int md5Flag = checkMD5(secreto);
-    if (md5Flag != 0) // si no es un hash MD5, sal del programa.
+    bool md5Flag = checkMD5(secreto);
+    if (md5Flag == false) // si no es un hash MD5, sal del programa.
     {
         return 1;
     }
