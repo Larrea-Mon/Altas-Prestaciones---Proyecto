@@ -1,7 +1,7 @@
 // mpicc crackerLMMPI.c -o crackerLMMPI.exe -lcrypto -Wno-deprecated-declarations
 // mpirun -np 4 ./crackerLMMPI.exe -h 827ccb0eea8a706c4c34a16891f84e7b
 // el hash es de 12345
-// Si al prender el programa todos los procesos piensan que son el proceso 0, desinstala todas tus versiones de MPI y haz "sudo apt install openmpi-bin libopenmpi-dev" 
+// Si al prender el programa todos los procesos piensan que son el proceso 0, desinstala todas tus versiones de MPI y haz "sudo apt install openmpi-bin libopenmpi-dev"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -60,10 +60,10 @@ bool check(unsigned long long candidata, char secreto[], int rank, bool verbose)
     if (verbose)
         printf("Proceso %d - %lli - comprobando contraseña %s - %s\n", rank, candidata, pass, passMD5);
 
-     if(strcmp(passMD5, secreto) == 0)
-     return true;
-     else
-     return false;
+    if (strcmp(passMD5, secreto) == 0)
+        return true;
+    else
+        return false;
 }
 
 bool checkMD5(char entrada[])
@@ -86,30 +86,30 @@ bool checkMD5(char entrada[])
 
 int main(int argc, char *argv[])
 {
-    
+
     int opt;
     char secreto[SIZE] = "";
 
     bool verbose = false;
 
     while ((opt = getopt(argc, argv, "h:v")) != -1)
-{
-    switch (opt)
     {
-    case 'h':
-        strncpy(secreto, optarg, SIZE);
-        break;
-    case 'v':
-        verbose = true;
-        break;
-    default:
-        fprintf(stderr, "Uso: %s -h hash [-v]\n", argv[0]);
-        MPI_Finalize();
-        return EXIT_FAILURE;
+        switch (opt)
+        {
+        case 'h':
+            strncpy(secreto, optarg, SIZE);
+            break;
+        case 'v':
+            verbose = true;
+            break;
+        default:
+            fprintf(stderr, "Uso: %s -h hash [-v]\n", argv[0]);
+            MPI_Finalize();
+            return EXIT_FAILURE;
+        }
     }
-}
 
-    if (checkMD5(secreto) != 0)
+    if (checkMD5(secreto) == false)
     {
         return EXIT_FAILURE;
     }
@@ -136,10 +136,12 @@ int main(int argc, char *argv[])
         printf("Usando %d procesos MPI para buscar la contraseña con hash: %s\n", world_size, secreto);
         printf("Buscando...\n");
     }
+    // Broadcast start_time to all processes
+    MPI_Bcast(&start_time, sizeof(struct timespec), MPI_BYTE, 0, MPI_COMM_WORLD);
 
     while (!global_found)
     {
-        if (check(current, secreto, world_rank,verbose))
+        if (check(current, secreto, world_rank, verbose))
         {
             found = 1;
             winning_value = current;
@@ -152,7 +154,6 @@ int main(int argc, char *argv[])
             break;
 
         current += world_size;
-
     }
 
     // Share the winning value from the rank that found it
@@ -165,10 +166,14 @@ int main(int argc, char *argv[])
         elapsed = (end_time.tv_sec - start_time.tv_sec) +
                   (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
 
+        int hours = (int)(elapsed / 3600);
+        int minutes = ((int)elapsed % 3600) / 60;
+        double seconds = elapsed - (hours * 3600) - (minutes * 60);
+
         char resultado[100];
         int_to_pass(winning_value, resultado);
         printf("Contraseña encontrada por el proceso %d: %s\n", world_rank, resultado);
-        printf("Tiempo transcurrido: %.2f segundos\n", elapsed);
+        printf("Tiempo transcurrido: %02d:%02d:%05.2f (hh:mm:ss)\n", hours, minutes, seconds);
     }
 
     MPI_Finalize();
